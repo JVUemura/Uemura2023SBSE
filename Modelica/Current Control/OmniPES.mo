@@ -593,7 +593,7 @@ package OmniPES
     protected
       annotation(
         Icon(graphics = {Ellipse(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(origin = {-1, 0}, lineColor = {0, 0, 255}, extent = {{-65, 52}, {65, -52}}, textString = "DFIG")}),
-        experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-6, Interval = 0.002));
+        experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-06, Interval = 0.002));
     end DFIG_WT;
 
     package Interfaces
@@ -659,7 +659,7 @@ package OmniPES
         parameter Units.PerUnit LBD_opt = 6.3279 "Tip speed ratio optimal" annotation(
           Dialog(group = "Turbine Data"));
         // Conv data:
-        parameter Units.PerUnit Di = 0.01 "Degenerator impedance" annotation(
+        parameter Units.PerUnit Di = 100 "Degenerator impedance" annotation(
           Dialog(group = "Conversor Data"));
         parameter Units.PerUnit Ceq = 35.897 "Capacitor of converter" annotation(
           Dialog(group = "Conversor Data"));
@@ -719,7 +719,7 @@ package OmniPES
           parameter Units.PerUnit Dtm = 1.5 annotation(
             Dialog(group = "Mechanical Data"));
           // Conversor:
-          parameter Units.PerUnit Di = 0.01 "Degenerator admitance" annotation(
+          parameter Units.PerUnit Di = 100 "Degenerator admitance" annotation(
             Dialog(group = "Conversor Data"));
           parameter Units.PerUnit Ceq = 35.897 annotation(
             Dialog(group = "Conversor Data"));
@@ -910,7 +910,7 @@ package OmniPES
         OmniPES.Units.PerUnit fqs, fds, fqr, fdr;
         OmniPES.Units.PerUnit Te, Tm;
         OmniPES.Units.CPerUnit Ss, Sr, Ssr;
-        OmniPES.Units.PerUnit Sc;
+        OmniPES.Units.PerUnit Sc, Ir;
         //  Parâmetros MIT 2 MW, 690V, 60Hz (pu):
         constant OmniPES.Units.PerUnit We = 1;
         parameter OmniPES.Units.PerUnit rs = 0.01 annotation(
@@ -937,9 +937,13 @@ package OmniPES
       initial equation
         theta_rm = 0;
         der(Wrm) = 0;
+        der(fqs) = 0;
+        der(fds) = 0;
         der(fqr) = 0;
         der(fdr) = 0;
       equation
+// Magnitude do fasor corrente do rotor:
+        Ir ^ 2 = Iqr ^ 2 + Idr ^ 2;
 //  Entradas externas:
         Vqs = pin_p.v.re;
         Vds = pin_p.v.im;
@@ -956,8 +960,8 @@ package OmniPES
 //  Estator Fluxo e Tensão:
         fqs = Lls * Iqs + Lm * (Iqs + Iqr);
         fds = Lls * Ids + Lm * (Ids + Idr);
-        Vqs = rs * Iqs + We * fds;
-        Vds = rs * Ids - We * fqs;
+        Vqs = rs * Iqs + We * fds + 0*der(fqs);
+        Vds = rs * Ids - We * fqs + 0*der(fds);
 //  Rotor Fluxo e Tensão:
         fqr = Llr * Iqr + Lm * (Iqs + Iqr);
         fdr = Llr * Idr + Lm * (Ids + Idr);
@@ -985,7 +989,7 @@ package OmniPES
 
       model CONVERSOR
         // Parametros conversor:
-        parameter Units.PerUnit Di = 0.1 "Degenerator admitance" annotation(
+        parameter Units.PerUnit Di = 100 "Degenerator admitance" annotation(
           Dialog(group = "Conversor Data"));
         parameter Units.PerUnit Ceq = 35.897 "Capacitor of converter" annotation(
           Dialog(group = "Conversor Data"));
@@ -1001,7 +1005,7 @@ package OmniPES
         OmniPES.Circuit.Interfaces.PositivePin outG annotation(
           Placement(visible = true, transformation(origin = {120, 16}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {114, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Electrical.Analog.Basic.Ground ground annotation(
-          Placement(visible = true, transformation(origin = {14, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Placement(visible = true, transformation(origin = {14, -10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Electrical.Analog.Basic.Capacitor capacitor(C = Ceq) annotation(
           Placement(visible = true, transformation(origin = {14, 14}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
         Modelica.Electrical.Analog.Sources.SignalCurrent IccRSC annotation(
@@ -1014,10 +1018,14 @@ package OmniPES
           Placement(visible = true, transformation(origin = {-82, 8}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
         OmniPES.Circuit.Sources.ControlledCurrentSource currGSC annotation(
           Placement(visible = true, transformation(origin = {78, 6}, extent = {{-10, 10}, {10, -10}}, rotation = -90)));
-        OmniPES.Circuit.Basic.ShuntAdmittance shuntAdmittance(b =  Di, g = Di) annotation(
-          Placement(visible = true, transformation(origin = {-102, 8}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
-        OmniPES.Circuit.Basic.ShuntAdmittance shuntAdmittance1(b =  Di, g = Di) annotation(
-          Placement(visible = true, transformation(origin = {98, 6}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        Circuit.Basic.Ground ground1 annotation(
+          Placement(visible = true, transformation(origin = {-100, -12}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Circuit.Basic.SeriesImpedance degImpR(r = Di) annotation(
+          Placement(visible = true, transformation(origin = {-100, 4}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        Circuit.Basic.Ground ground2 annotation(
+          Placement(visible = true, transformation(origin = {108, -16}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Circuit.Basic.SeriesImpedance degImpG(r = Di) annotation(
+          Placement(visible = true, transformation(origin = {108, 0}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
       initial equation
         der(capacitor.v) = 0;
       equation
@@ -1027,33 +1035,37 @@ package OmniPES
         Pcc_RSC = currRSC.S.re;
         Pcc_GSC = currGSC.S.re;
         connect(ground.p, capacitor.n) annotation(
-          Line(points = {{14, -4}, {14, 4}}, color = {0, 0, 255}));
+          Line(points = {{14, 0}, {14, 4}}, color = {0, 0, 255}));
         connect(voltageSensor.p, capacitor.p) annotation(
           Line(points = {{-14, 24}, {14, 24}}, color = {0, 0, 255}));
         connect(ground.p, voltageSensor.n) annotation(
-          Line(points = {{14, -4}, {-14, -4}, {-14, 4}}, color = {0, 0, 255}));
+          Line(points = {{14, 0}, {-14, 0}, {-14, 4}}, color = {0, 0, 255}));
         connect(voltageSensor.v, outVcc) annotation(
           Line(points = {{-25, 14}, {-26, 14}, {-26, -30}}, color = {0, 0, 127}));
         connect(ground.p, IccRSC.p) annotation(
-          Line(points = {{14, -4}, {-46, -4}, {-46, 4}}, color = {0, 0, 255}));
+          Line(points = {{14, 0}, {-46, 0}, {-46, 4}}, color = {0, 0, 255}));
         connect(ground.p, IccGSC.p) annotation(
-          Line(points = {{14, -4}, {34, -4}, {34, 4}}, color = {0, 0, 255}));
+          Line(points = {{14, 0}, {34, 0}, {34, 4}}, color = {0, 0, 255}));
         connect(voltageSensor.p, IccRSC.n) annotation(
           Line(points = {{-14, 24}, {-46, 24}}, color = {0, 0, 255}));
         connect(IccGSC.n, capacitor.p) annotation(
           Line(points = {{34, 24}, {14, 24}}, color = {0, 0, 255}));
-  connect(currRSC.p, outR) annotation(
+        connect(currRSC.p, outR) annotation(
           Line(points = {{-82, 18}, {-120, 18}}, color = {0, 0, 255}));
-  connect(currGSC.p, outG) annotation(
+        connect(currGSC.p, outG) annotation(
           Line(points = {{78, 16}, {120, 16}}, color = {0, 0, 255}));
         connect(Ig, currGSC.u) annotation(
           Line(points = {{60, -30}, {60, 6}, {70, 6}}, color = {85, 170, 255}));
         connect(currRSC.u, Ir) annotation(
           Line(points = {{-74, 8}, {-70, 8}, {-70, -30}}, color = {85, 170, 255}));
-  connect(outR, shuntAdmittance.p) annotation(
-          Line(points = {{-120, 18}, {-102, 18}}, color = {0, 0, 255}));
-  connect(outG, shuntAdmittance1.p) annotation(
-          Line(points = {{120, 16}, {98, 16}}, color = {0, 0, 255}));
+        connect(ground1.p, degImpR.n) annotation(
+          Line(points = {{-100, -12}, {-100, -6}}, color = {0, 0, 255}));
+        connect(degImpR.p, currRSC.p) annotation(
+          Line(points = {{-100, 14}, {-100, 18}, {-82, 18}}, color = {0, 0, 255}));
+        connect(ground2.p, degImpG.n) annotation(
+          Line(points = {{108, -16}, {108, -10}}, color = {0, 0, 255}));
+        connect(outG, degImpG.p) annotation(
+          Line(points = {{120, 16}, {108, 16}, {108, 10}}, color = {0, 0, 255}));
         annotation(
           Icon(graphics = {Rectangle(origin = {-60, 0}, lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, extent = {{-40, 80}, {40, -80}}), Rectangle(origin = {60, 0}, lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, extent = {{-40, 80}, {40, -80}}), Line(origin = {-0.5, 35}, points = {{-19.5, 25}, {20.5, 25}, {20.5, 25}, {0.5, 25}, {0.5, -25}, {-9.5, -25}, {10.5, -25}, {10.5, -25}}, color = {0, 0, 255}), Line(origin = {-0.5, -35}, points = {{-19.5, -25}, {20.5, -25}, {0.5, -25}, {0.5, 35}, {-9.5, 35}, {10.5, 35}, {10.5, 35}}, color = {0, 0, 255}), Line(origin = {-85.43, -0.5}, points = {{-7, 0.5}, {7, 0.5}, {7, 20.5}, {7, -19.5}, {7, -19.5}}, color = {0, 0, 255}), Line(origin = {-61.77, -0.02}, points = {{-8.66454, 20.0191}, {-8.66454, -19.9809}, {-8.66454, 0.019071}, {-8.66454, 10.0191}, {7.33546, 40.0191}, {-8.66454, 10.0191}, {-8.66454, -9.9809}, {9.33546, -39.9809}, {-8.66454, -9.9809}, {-8.66454, -9.9809}}, color = {0, 0, 255}), Line(origin = {-41.16, -3.28}, points = {{-17.9642, 34}, {8.03576, 34}, {8.03576, 6}, {4.03576, 6}, {8.03576, -4}, {12.0358, 6}, {8.03576, 6}, {12.0358, 6}, {8.03576, -4}, {4.03576, -4}, {12.0358, -4}, {8.03576, -4}, {8.03576, -28}, {-15.9642, -28}, {-15.9642, -28}}, color = {0, 0, 255}), Line(origin = {76.44, -3.28}, points = {{-17.9642, 34}, {8.03576, 34}, {8.03576, 6}, {4.03576, 6}, {8.03576, -4}, {12.0358, 6}, {8.03576, 6}, {12.0358, 6}, {8.03576, -4}, {4.03576, -4}, {12.0358, -4}, {8.03576, -4}, {8.03576, -28}, {-15.9642, -28}, {-15.9642, -28}}, color = {0, 0, 255}), Line(origin = {55.83, -0.02}, points = {{-8.66454, 20.0191}, {-8.66454, -19.9809}, {-8.66454, 0.019071}, {-8.66454, 10.0191}, {7.33546, 40.0191}, {-8.66454, 10.0191}, {-8.66454, -9.9809}, {9.33546, -39.9809}, {-8.66454, -9.9809}, {-8.66454, -9.9809}}, color = {0, 0, 255}), Line(origin = {32.17, -0.5}, points = {{-7, 0.5}, {7, 0.5}, {7, 20.5}, {7, -19.5}, {7, -19.5}}, color = {0, 0, 255})}),
           experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-06, Interval = 0.002));
@@ -1168,7 +1180,7 @@ package OmniPES
         Modelica.Blocks.Interfaces.RealInput Qsmed annotation(
           Placement(visible = true, transformation(origin = {22, 56}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {111, 71}, extent = {{-11, -11}, {11, 11}}, rotation = 180)));
         Modelica.ComplexBlocks.Interfaces.ComplexOutput outMr annotation(
-          Placement(visible = true, transformation(origin = {92, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(extent = {{-120, -80}, {-100, -60}}, rotation = 0)));
+          Placement(visible = true, transformation(origin = {122, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(extent = {{-120, -80}, {-100, -60}}, rotation = 0)));
         Modelica.ComplexBlocks.ComplexMath.RealToComplex MIr annotation(
           Placement(visible = true, transformation(origin = {18, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         OmniPES.WindTurbine.CONTROL_model.PI_ASTROM regW(ki = kiWrm, kp = kpWrm) annotation(
@@ -1177,7 +1189,7 @@ package OmniPES
           Placement(visible = true, transformation(origin = {-34, -14}, extent = {{16, -16}, {-16, 16}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Theta annotation(
           Placement(visible = true, transformation(origin = {-80, -46}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {110, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 180)));
-  OmniPES.WindTurbine.CONTROL_model.LIMITER limiter(maxMod = 1.2)  annotation(
+        OmniPES.WindTurbine.CONTROL_model.LIMITER limiter(maxMod = 1.5) annotation(
           Placement(visible = true, transformation(origin = {54, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       equation
 // Dados do sensores do estator:
@@ -1205,8 +1217,8 @@ package OmniPES
           Line(points = {{-16.4, -14}, {-6.4, -14}, {-6.4, -20}, {5.6, -20}}, color = {0, 0, 127}));
         connect(limiter.u, MIr.y) annotation(
           Line(points = {{43, -14}, {30, -14}}, color = {85, 170, 255}));
-  connect(limiter.y, outMr) annotation(
-          Line(points = {{66, -14}, {92, -14}}, color = {85, 170, 255}));
+        connect(limiter.y, outMr) annotation(
+          Line(points = {{66, -14}, {122, -14}}, color = {85, 170, 255}));
       protected
         annotation(
           Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(origin = {1, 1}, rotation = 180, lineColor = {0, 0, 255}, extent = {{-72, 68}, {72, -68}}, textString = "RSC"), Text(origin = {-31, -154}, lineColor = {255, 255, 255}, extent = {{-11, 6}, {11, -6}}, textString = "Qesp"), Text(origin = {-81, 81}, lineColor = {255, 255, 255}, extent = {{-9, 7}, {9, -7}}, textString = "Wrm"), Text(origin = {82, 81}, lineColor = {255, 255, 255}, extent = {{-10, 7}, {10, -7}}, textString = "Qs"), Text(origin = {-1, -92}, lineColor = {119, 118, 123}, extent = {{-11, 6}, {11, -6}}, textString = "Vccmed", textStyle = {TextStyle.Italic})}),
@@ -1221,8 +1233,6 @@ package OmniPES
         parameter OmniPES.Units.PerUnit Ceq = 61.5496 annotation(
           Dialog(group = "Converter Data"));
         // Parâmetros dos reguladores:
-        parameter Real Vccref = 1 annotation(
-          Dialog(group = "Control Data"));
         parameter Real zetaVcc = 1 annotation(
           Dialog(group = "Control Data"));
         parameter Real tsVcc = 1 annotation(
@@ -1232,44 +1242,57 @@ package OmniPES
         parameter Real kiVcc = 16 * Ceq / (zetaVcc * tsVcc) ^ 2 annotation(
           Dialog(group = "Control Calculed"));
         Modelica.Blocks.Interfaces.RealInput Vccmed annotation(
-          Placement(visible = true, transformation(origin = {-80, 30}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {0, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
+          Placement(visible = true, transformation(origin = {-80, 24}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {0, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Modelica.ComplexBlocks.Interfaces.ComplexOutput outMg annotation(
-          Placement(visible = true, transformation(origin = {84, -58}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Placement(visible = true, transformation(origin = {116, -58}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Math.Product product annotation(
-          Placement(visible = true, transformation(origin = {-38, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Placement(visible = true, transformation(origin = {-38, 24}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput angulo annotation(
           Placement(visible = true, transformation(origin = {-88, -80}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.ComplexBlocks.ComplexMath.RealToComplex realToComplex annotation(
           Placement(visible = true, transformation(origin = {6, -58}, extent = {{10, 10}, {-10, -10}}, rotation = 180)));
         OmniPES.WindTurbine.CONTROL_model.PI_ASTROM Vcc_control(ki = kiVcc, kp = kpVcc) annotation(
-          Placement(visible = true, transformation(origin = {0, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Placement(visible = true, transformation(origin = {0, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         OmniPES.WindTurbine.CONTROL_model.iPARK ipark annotation(
           Placement(visible = true, transformation(origin = {-48, -58}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
-  LIMITER limiter(maxMod = 1.2)  annotation(
+        LIMITER limiter(maxMod = 1.5) annotation(
           Placement(visible = true, transformation(origin = {44, -58}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+      
+  Modelica.Blocks.Math.Product product1 annotation(
+          Placement(visible = true, transformation(origin = {-38, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Step Vccref(height = 0, offset = 1, startTime = 0)  annotation(
+          Placement(visible = true, transformation(origin = {-90, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       equation
-// Referência de tensão no barramento CC:
-        Vccref ^ 2 = Vcc_control.r;
 // Sinais de referência:
         Iqg = Vcc_control.y;
         Idg = 0;
         ipark.u = {Iqg, Idg};
-        connect(Vccmed, product.u1) annotation(
-          Line(points = {{-80, 30}, {-65, 30}, {-65, 36}, {-50, 36}}, color = {0, 0, 127}));
-        connect(product.u2, Vccmed) annotation(
-          Line(points = {{-50, 24}, {-65, 24}, {-65, 30}, {-80, 30}}, color = {0, 0, 127}));
-        connect(product.y, Vcc_control.m) annotation(
-          Line(points = {{-27, 30}, {0, 30}, {0, 39}}, color = {0, 0, 127}));
+  connect(Vccmed, product.u1) annotation(
+          Line(points = {{-80, 24}, {-65, 24}, {-65, 30}, {-50, 30}}, color = {0, 0, 127}));
+  connect(product.u2, Vccmed) annotation(
+          Line(points = {{-50, 18}, {-65, 18}, {-65, 24}, {-80, 24}}, color = {0, 0, 127}));
+  connect(product.y, Vcc_control.m) annotation(
+          Line(points = {{-27, 24}, {0, 24}, {0, 49}}, color = {0, 0, 127}));
         connect(angulo, ipark.theta) annotation(
           Line(points = {{-88, -80}, {-48, -80}, {-48, -69}}, color = {0, 0, 127}));
         connect(ipark.y[1], realToComplex.re) annotation(
           Line(points = {{-37, -58}, {-25, -58}, {-25, -52}, {-7, -52}}, color = {0, 0, 127}));
         connect(ipark.y[2], realToComplex.im) annotation(
           Line(points = {{-37, -58}, {-25, -58}, {-25, -64}, {-7, -64}}, color = {0, 0, 127}));
-  connect(realToComplex.y, limiter.u) annotation(
+        connect(realToComplex.y, limiter.u) annotation(
           Line(points = {{18, -58}, {34, -58}}, color = {85, 170, 255}));
   connect(limiter.y, outMg) annotation(
-          Line(points = {{56, -58}, {84, -58}}, color = {85, 170, 255}));
+          Line(points = {{56, -58}, {116, -58}}, color = {85, 170, 255}));
+  connect(product1.y, Vcc_control.r) annotation(
+          Line(points = {{-27, 60}, {-12, 60}}, color = {0, 0, 127}));
+  connect(Vccref.y, product1.u1) annotation(
+          Line(points = {{-63, 60}, {-50, 60}, {-50, 66}}, color = {0, 0, 127}));
+  connect(Vccref.y, product1.u2) annotation(
+          Line(points = {{-63, 60}, {-50, 60}, {-50, 54}}, color = {0, 0, 127}));
+  connect(Vccref.y, product1.u1) annotation(
+          Line(points = {{-79, 60}, {-66, 60}, {-66, 66}, {-50, 66}}, color = {0, 0, 127}));
+  connect(Vccref.y, product1.u2) annotation(
+          Line(points = {{-79, 60}, {-66, 60}, {-66, 54}, {-50, 54}}, color = {0, 0, 127}));
         annotation(
           Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(origin = {3, 1}, rotation = 180, lineColor = {0, 0, 255}, extent = {{-72, 66}, {72, -66}}, textString = "GRC"), Text(origin = {-31, -154}, lineColor = {255, 255, 255}, extent = {{-11, 6}, {11, -6}}, textString = "Qesp"), Text(origin = {-81, 81}, lineColor = {255, 255, 255}, extent = {{-9, 7}, {9, -7}}, textString = "Wrm"), Text(origin = {82, 81}, lineColor = {255, 255, 255}, extent = {{-10, 7}, {10, -7}}, textString = "Qs")}),
           experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-06, Interval = 0.002));
@@ -1313,9 +1336,9 @@ package OmniPES
         Modelica.ComplexBlocks.Interfaces.ComplexOutput Mqdr annotation(
           Placement(visible = true, transformation(origin = {-84, -14}, extent = {{-6, -6}, {6, 6}}, rotation = 0), iconTransformation(origin = {-50, 90}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Modelica.ComplexBlocks.Interfaces.ComplexOutput Mqdg annotation(
-          Placement(visible = true, transformation(origin = {98, -14}, extent = {{-6, -6}, {6, 6}}, rotation = 0), iconTransformation(origin = {50, 90}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
+          Placement(visible = true, transformation(origin = {98, -14}, extent = {{6, -6}, {-6, 6}}, rotation = 0), iconTransformation(origin = {50, 90}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Modelica.Blocks.Interfaces.RealInput Vccmed annotation(
-          Placement(visible = true, transformation(origin = {-90, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {0, 90}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+          Placement(visible = true, transformation(origin = {58, -42}, extent = {{10, -10}, {-10, 10}}, rotation = -90), iconTransformation(origin = {0, 90}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
         Modelica.Blocks.Interfaces.RealInput Vqds[2] annotation(
           Placement(visible = true, transformation(origin = {1.42109e-14, -80}, extent = {{-10, -10}, {10, 10}}, rotation = 90), iconTransformation(origin = {110, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 180)));
         Modelica.Blocks.Interfaces.RealInput Qmed annotation(
@@ -1330,7 +1353,7 @@ package OmniPES
           Placement(visible = true, transformation(origin = {-47, 1}, extent = {{-21, -21}, {21, 21}}, rotation = 0)));
         OmniPES.WindTurbine.CONTROL_model.PLL pll annotation(
           Placement(visible = true, transformation(origin = {0, -48}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
-        OmniPES.WindTurbine.CONTROL_model.GSC gsc(Ceq = Ceq, Vccref = Vccref, tsVcc = tsVcc, zetaVcc = zetaVcc) annotation(
+        OmniPES.WindTurbine.CONTROL_model.GSC gsc(Ceq = Ceq, tsVcc = tsVcc, zetaVcc = zetaVcc) annotation(
           Placement(visible = true, transformation(origin = {57, 1}, extent = {{-21, -21}, {21, 21}}, rotation = 0)));
       equation
         connect(rsc.Wref, Wref) annotation(
@@ -1350,13 +1373,14 @@ package OmniPES
         connect(rsc.outMr, Mqdr) annotation(
           Line(points = {{-70, -14}, {-84, -14}}, color = {85, 170, 255}));
         connect(Vccmed, gsc.Vccmed) annotation(
-          Line(points = {{-90, -30}, {58, -30}, {58, -22}}, color = {0, 0, 127}));
-        connect(gsc.angulo, pll.Phi) annotation(
-          Line(points = {{34, -14}, {-6, -14}, {-6, -36}}, color = {0, 0, 127}));
+          Line(points = {{58, -42}, {58, -22}}, color = {0, 0, 127}));
         connect(gsc.outMg, Mqdg) annotation(
           Line(points = {{80, -14}, {98, -14}}, color = {85, 170, 255}));
+        connect(gsc.angulo, pll.Phi) annotation(
+          Line(points = {{34, -14}, {-6, -14}, {-6, -36}}, color = {0, 0, 127}));
         annotation(
-          Icon(graphics = {Rectangle(origin = {0, 40}, lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 40}, {100, -40}}), Text(origin = {-50, 73}, lineColor = {0, 0, 255}, extent = {{-8, 5}, {8, -5}}, textString = "Ir"), Text(origin = {52, 73}, lineColor = {0, 0, 255}, extent = {{-8, 5}, {8, -5}}, textString = "Ig"), Text(origin = {0, 72}, lineColor = {0, 0, 255}, extent = {{-8, 4}, {8, -4}}, textString = "Vcc"), Text(origin = {91, 11}, lineColor = {0, 0, 255}, extent = {{-9, 5}, {9, -5}}, textString = "Vs"), Text(origin = {86, 42}, lineColor = {0, 0, 255}, extent = {{-10, 8}, {10, -8}}, textString = "Qmed"), Text(origin = {-86, 41}, lineColor = {0, 0, 255}, extent = {{-10, 7}, {10, -7}}, textString = "Wmed"), Text(origin = {-87, 10}, lineColor = {0, 0, 255}, extent = {{-9, 6}, {9, -6}}, textString = "Wref"), Text(origin = {0, 8}, lineColor = {0, 0, 255}, extent = {{-10, 8}, {10, -8}}, textString = "Qref"), Text(origin = {0, 38}, lineColor = {0, 0, 255}, extent = {{-60, 20}, {60, -20}}, textString = "ELEC CTRL")}));
+          Icon(graphics = {Rectangle(origin = {0, 40}, lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 40}, {100, -40}}), Text(origin = {-50, 73}, lineColor = {0, 0, 255}, extent = {{-8, 5}, {8, -5}}, textString = "Ir"), Text(origin = {52, 73}, lineColor = {0, 0, 255}, extent = {{-8, 5}, {8, -5}}, textString = "Ig"), Text(origin = {0, 72}, lineColor = {0, 0, 255}, extent = {{-8, 4}, {8, -4}}, textString = "Vcc"), Text(origin = {91, 11}, lineColor = {0, 0, 255}, extent = {{-9, 5}, {9, -5}}, textString = "Vs"), Text(origin = {86, 42}, lineColor = {0, 0, 255}, extent = {{-10, 8}, {10, -8}}, textString = "Qmed"), Text(origin = {-86, 41}, lineColor = {0, 0, 255}, extent = {{-10, 7}, {10, -7}}, textString = "Wmed"), Text(origin = {-87, 10}, lineColor = {0, 0, 255}, extent = {{-9, 6}, {9, -6}}, textString = "Wref"), Text(origin = {0, 8}, lineColor = {0, 0, 255}, extent = {{-10, 8}, {10, -8}}, textString = "Qref"), Text(origin = {0, 38}, lineColor = {0, 0, 255}, extent = {{-60, 20}, {60, -20}}, textString = "ELEC CTRL")}),
+          experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-6, Interval = 0.002));
       end CTRL_MAQ;
 
       model CRTL_TUR
@@ -1385,7 +1409,7 @@ package OmniPES
           Dialog(group = "Turbine Data"));
         parameter Real Vw_wmax = 11.1757 annotation(
           Dialog(group = "Turbine Data"));
-        Modelica.Blocks.Tables.CombiTable1Ds combiTable1Ds(extrapolation = Modelica.Blocks.Types.Extrapolation.LastTwoPoints, fileName = "/home/uemura/MYCODE/SBSE/Modelica/Current Control/mybeta.mat", smoothness = Modelica.Blocks.Types.Smoothness.LinearSegments, tableName = "beta", tableOnFile = true, verboseRead = false) annotation(
+        Modelica.Blocks.Tables.CombiTable1Ds combiTable1Ds(extrapolation = Modelica.Blocks.Types.Extrapolation.LastTwoPoints, fileName = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Modelica/Current Control/mybeta.mat", smoothness = Modelica.Blocks.Types.Smoothness.LinearSegments, tableName = "beta", tableOnFile = true, verboseRead = false) annotation(
           Placement(visible = true, transformation(origin = {8, -40}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       algorithm
 // Região 1:
@@ -1453,21 +1477,18 @@ ASTRÖM"), Text(origin = {-3, 127}, lineColor = {0, 0, 255}, extent = {{-105, 17
         import arg = Modelica.ComplexMath.arg;
         import absC = Modelica.ComplexMath.abs;
         parameter Real maxMod = 1;
-        Real absU,faseU,absY,faseY;
+        Real absU, faseU, absY, faseY;
         Modelica.ComplexBlocks.Interfaces.ComplexInput u annotation(
           Placement(visible = true, transformation(origin = {-100, -4}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.ComplexBlocks.Interfaces.ComplexOutput y annotation(
           Placement(visible = true, transformation(origin = {86, -12}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       equation
         absU = absC(u);
-        faseU = arg(u);  
-        
+        faseU = arg(u);
         absY = if absU < maxMod then absU else maxMod;
         faseY = faseU;
-        
         absY = absC(y);
         faseY = arg(y);
-        
         annotation(
           Icon(graphics = {Line(points = {{-80, -70}, {-50, -70}, {50, 70}, {80, 70}}), Polygon(lineColor = {192, 192, 192}, fillColor = {192, 192, 192}, fillPattern = FillPattern.Solid, points = {{0, 90}, {-8, 68}, {8, 68}, {0, 90}}), Rectangle(lineColor = {0, 0, 127}, fillColor = {255, 255, 255}, extent = {{-100, -100}, {100, 100}}), Line(points = {{-90, 0}, {68, 0}}, color = {192, 192, 192}), Polygon(lineColor = {192, 192, 192}, fillColor = {192, 192, 192}, fillPattern = FillPattern.Solid, points = {{90, 0}, {68, -8}, {68, 8}, {90, 0}}), Line(visible = false, points = {{50, 70}, {80, 70}}, color = {255, 0, 0}), Line(points = {{0, -90}, {0, 68}}, color = {192, 192, 192}), Line(visible = false, points = {{-80, -70}, {-50, -70}}, color = {255, 0, 0})}));
       end LIMITER;
@@ -1569,29 +1590,29 @@ ASTRÖM"), Text(origin = {-3, 127}, lineColor = {0, 0, 255}, extent = {{-105, 17
         inner OmniPES.SystemData data(Sbase = 2) annotation(
           Placement(visible = true, transformation(origin = {87, 89}, extent = {{-15, -15}, {15, 15}}, rotation = 0)));
         OmniPES.WindTurbine.DFIG_WT dfig_wt(smData = smData) annotation(
-          Placement(visible = true, transformation(origin = {-24, 10}, extent = {{-16, -16}, {16, 16}}, rotation = 0)));
-        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = 0.75, offset = 11.25, startTime = 0) annotation(
+          Placement(visible = true, transformation(origin = {-20, 10}, extent = {{-16, -16}, {16, 16}}, rotation = 0)));
+        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = -6, offset = 12, startTime = 5) annotation(
           Placement(visible = true, transformation(origin = {-70, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Sources.Step step(height = 0, offset = 0, startTime = 0) annotation(
           Placement(visible = true, transformation(origin = {-70, -24}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         OmniPES.Circuit.Sources.VoltageSource voltageSource annotation(
-          Placement(visible = true, transformation(origin = {72, 0}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+          Placement(visible = true, transformation(origin = {60, 0}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
         OmniPES.Circuit.Interfaces.Bus bus annotation(
-          Placement(visible = true, transformation(origin = {32, 12}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        parameter Interfaces.DWTData smData(Di = 1e-4,Hm(displayUnit = "s"), Ht(displayUnit = "s"), MVAs = data.Sbase, Wb = data.wb, ts_beta(displayUnit = "ns")) annotation(
-          Placement(visible = true, transformation(origin = {-24, 38}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Placement(visible = true, transformation(origin = {20, 12}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        parameter OmniPES.WindTurbine.Interfaces.DWTData smData( Di = 100,Hm(displayUnit = "s"), Ht(displayUnit = "s"), MVAs = data.Sbase, Wb = data.wb, tsVcc = 5, tsWrm = 5, ts_beta(displayUnit = "s")) annotation(
+          Placement(visible = true, transformation(origin = {-20, 38}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       equation
         connect(step.y, dfig_wt.Qref) annotation(
-          Line(points = {{-59, -24}, {-24, -24}, {-24, -8}}, color = {0, 0, 127}));
-        connect(ramp.y, dfig_wt.VW) annotation(
-          Line(points = {{-59, 10}, {-43, 10}}, color = {0, 0, 127}));
+          Line(points = {{-59, -24}, {-20, -24}, {-20, -8}}, color = {0, 0, 127}));
         connect(dfig_wt.pin_WT, bus.p) annotation(
-          Line(points = {{-6.4, 10}, {32, 10}}, color = {0, 0, 255}));
+          Line(points = {{-2, 10}, {20, 10}}, color = {0, 0, 255}));
         connect(voltageSource.p, bus.p) annotation(
-          Line(points = {{72, 10}, {32, 10}}, color = {0, 0, 255}));
+          Line(points = {{60, 10}, {20, 10}}, color = {0, 0, 255}));
+        connect(ramp.y, dfig_wt.VW) annotation(
+          Line(points = {{-59, 10}, {-38, 10}}, color = {0, 0, 127}));
       protected
         annotation(
-          experiment(StartTime = 0, StopTime = 120, Tolerance = 1e-06, Interval = 0.001));
+          experiment(StartTime = 0, StopTime = 100, Tolerance = 1e-06, Interval = 0.0005));
       end testeInfinityBar;
 
       model testeRadial
@@ -1600,9 +1621,9 @@ ASTRÖM"), Text(origin = {-3, 127}, lineColor = {0, 0, 255}, extent = {{-105, 17
           Placement(visible = true, transformation(origin = {87, 89}, extent = {{-15, -15}, {15, 15}}, rotation = 0)));
         OmniPES.WindTurbine.DFIG_WT dfig_wt(smData = smData) annotation(
           Placement(visible = true, transformation(origin = {-24, 10}, extent = {{-16, -16}, {16, 16}}, rotation = 0)));
-        parameter OmniPES.WindTurbine.Interfaces.DWTData smData(Hm(displayUnit = "s"), Ht(displayUnit = "s"), MVAs = data.Sbase, Wb = data.wb) annotation(
+        parameter OmniPES.WindTurbine.Interfaces.DWTData smData(Hm(displayUnit = "ks"), Ht(displayUnit = "s"), MVAs = data.Sbase, Wb = data.wb, tsVcc = 1, tsWrm = 5) annotation(
           Placement(visible = true, transformation(origin = {-24, 38}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = 0.75, offset = 11.25, startTime = 5) annotation(
+        Modelica.Blocks.Sources.Ramp ramp(duration = 5, height = 0.75, offset = 11.25, startTime = 5) annotation(
           Placement(visible = true, transformation(origin = {-70, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Sources.Step step(height = 0, offset = 0, startTime = 0) annotation(
           Placement(visible = true, transformation(origin = {-70, -24}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
@@ -1640,17 +1661,17 @@ ASTRÖM"), Text(origin = {-3, 127}, lineColor = {0, 0, 255}, extent = {{-105, 17
           Placement(visible = true, transformation(origin = {-24, 10}, extent = {{-16, -16}, {16, 16}}, rotation = 0)));
         Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = 0, offset = 12, startTime = 0) annotation(
           Placement(visible = true, transformation(origin = {-70, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        Modelica.Blocks.Sources.Step step(height = 0, offset = 0, startTime = 0) annotation(
+        Modelica.Blocks.Sources.Step step(height = 0, offset = 0.5, startTime = 0) annotation(
           Placement(visible = true, transformation(origin = {-70, -24}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         OmniPES.Circuit.Interfaces.Bus bus annotation(
           Placement(visible = true, transformation(origin = {32, 12}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        parameter Interfaces.DWTData smData(Hm(displayUnit = "s"), Ht(displayUnit = "s"), MVAs = data.Sbase, Wb = data.wb) annotation(
+        parameter Interfaces.DWTData smData( Hm(displayUnit = "s"), Ht(displayUnit = "s"), MVAs = data.Sbase, Wb = data.wb) annotation(
           Placement(visible = true, transformation(origin = {-24, 38}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         OmniPES.Circuit.Sources.ControlledVoltageSource controlledVoltageSource annotation(
           Placement(visible = true, transformation(origin = {60, 0}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
         Modelica.ComplexBlocks.Sources.ComplexStep complexStep(height = Complex(-0.8, 0), offset = Complex(1, 0), startTime = 1) annotation(
           Placement(visible = true, transformation(origin = {126, 6}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
-        Modelica.ComplexBlocks.Sources.ComplexStep complexStep1(height = Complex(0.8, 0), offset = Complex(0), startTime = 1.2) annotation(
+        Modelica.ComplexBlocks.Sources.ComplexStep complexStep1(height = Complex(0.8, 0), offset = Complex(0), startTime = 1.1) annotation(
           Placement(visible = true, transformation(origin = {126, -34}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
         Modelica.ComplexBlocks.ComplexMath.Add add annotation(
           Placement(visible = true, transformation(origin = {86, 0}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
@@ -1671,7 +1692,7 @@ ASTRÖM"), Text(origin = {-3, 127}, lineColor = {0, 0, 255}, extent = {{-105, 17
           Line(points = {{98, -6}, {106, -6}, {106, -34}, {116, -34}}, color = {85, 170, 255}));
       protected
         annotation(
-          experiment(StartTime = 0, StopTime = 5, Tolerance = 1e-06, Interval = 0.0005));
+          experiment(StartTime = 0, StopTime = 10, Tolerance = 1e-06, Interval = 0.0005));
       end testeInfinityBarFalt;
     end Examples;
   end WindTurbine;
