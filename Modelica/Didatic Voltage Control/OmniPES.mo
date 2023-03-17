@@ -539,7 +539,7 @@ package OmniPES
         Placement(visible = true, transformation(origin = {38, 12}, extent = {{-6, -6}, {6, 6}}, rotation = 0)));
       OmniPES.WindTurbine.SENSORS.PowerSensor powerSensor annotation(
         Placement(visible = true, transformation(origin = {68, 36}, extent = {{-6, -6}, {6, 6}}, rotation = 0)));
-      OmniPES.WindTurbine.CONVERSOR_model.CONVERSOR conversor(Ceq = smData.convData.Ceq, KC = smData.KC) annotation(
+      OmniPES.WindTurbine.CONVERSOR_model.CONVERSOR conversor(Ceq = smData.convData.Ceq, Kc = smData.Kc) annotation(
         Placement(visible = true, transformation(origin = {8, 12}, extent = {{-16, -16}, {16, 16}}, rotation = 0)));
       Modelica.Mechanics.Rotational.Sensors.SpeedSensor tac annotation(
         Placement(visible = true, transformation(origin = {-51, 31}, extent = {{-5, -5}, {5, 5}}, rotation = -90)));
@@ -1022,7 +1022,7 @@ package OmniPES
       extends Modelica.Icons.Package;
 
       model CONVERSOR
-        parameter OmniPES.Units.PerUnit KC = 0.5 / sqrt(2) * 1400 / (690 / sqrt(3)) annotation(
+        parameter OmniPES.Units.PerUnit Kc = 0.5 / sqrt(2) * 1400 / (690 / sqrt(3)) annotation(
           Dialog(group = "Eletrical Data"));
         // Parametros conversor:
         parameter Units.PerUnit Ceq = 35.897 "Capacitor of converter" annotation(
@@ -1060,8 +1060,8 @@ package OmniPES
         Pcc_GSC = IccGSC.i * capacitor.v;
         Pcc_RSC = controlledVoltageSourceR.S.re;
         Pcc_GSC = controlledVoltageSourceG.S.re;
-        controlledVoltageSourceR.v = KC * capacitor.v * Mr;
-        controlledVoltageSourceG.v = KC * capacitor.v * Mg;
+        controlledVoltageSourceR.v = Kc * capacitor.v * Mr;
+        controlledVoltageSourceG.v = Kc * capacitor.v * Mg;
         connect(ground.p, capacitor.n) annotation(
           Line(points = {{14, -4}, {14, 4}}, color = {0, 0, 255}));
         connect(voltageSensor.p, capacitor.p) annotation(
@@ -2059,11 +2059,11 @@ ASTRÖM")}));
 
       model testeInfinityBar
         extends Modelica.Icons.Example;
-        inner OmniPES.SystemData data(Sbase = 2) annotation(
+        inner OmniPES.SystemData data(Sbase = 2)  annotation(
           Placement(visible = true, transformation(origin = {87, 89}, extent = {{-15, -15}, {15, 15}}, rotation = 0)));
         OmniPES.WindTurbine.DFIG_WT dfig_wt(smData = smData) annotation(
           Placement(visible = true, transformation(origin = {-24, 10}, extent = {{-16, -16}, {16, 16}}, rotation = 0)));
-        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = 0.75, offset = 11.25, startTime = 5) annotation(
+        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = -1, offset = 12, startTime = 5) annotation(
           Placement(visible = true, transformation(origin = {-70, 10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Sources.Step step(height = 0, offset = 0, startTime = 0) annotation(
           Placement(visible = true, transformation(origin = {-70, -24}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
@@ -2124,26 +2124,6 @@ ASTRÖM")}));
         annotation(
           experiment(StartTime = 0, StopTime = 100, Tolerance = 1e-06, Interval = 0.001));
       end testeRadial;
-
-      model analiseEfeitoDer
-        DFIG_model.MIT_fm mIT_fm annotation(
-          Placement(visible = true, transformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        Circuit.Sources.VoltageSource voltageSource annotation(
-          Placement(visible = true, transformation(origin = {30, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        OmniPES.Circuit.Basic.Ground ground annotation(
-          Placement(visible = true, transformation(origin = {0, -18}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        Modelica.Mechanics.Rotational.Sources.TorqueStep torqueStep(offsetTorque = -0.8, startTime = 0.1, stepTorque = -0.2) annotation(
-          Placement(visible = true, transformation(origin = {-40, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-      equation
-        connect(voltageSource.p, mIT_fm.pin_p) annotation(
-          Line(points = {{20, 0}, {12, 0}}, color = {0, 0, 255}));
-        connect(ground.p, mIT_fm.pin_n) annotation(
-          Line(points = {{0, -18}, {0, -6}}, color = {0, 0, 255}));
-        connect(torqueStep.flange, mIT_fm.eixo) annotation(
-          Line(points = {{-30, 0}, {0, 0}}));
-        annotation(
-          experiment(StartTime = 0, StopTime = 5, Tolerance = 1e-6, Interval = 0.001));
-      end analiseEfeitoDer;
     end Examples;
   end WindTurbine;
   annotation(
