@@ -5,7 +5,7 @@ Arquivos desenvolvidos para o simpósio brasileiro de sistemas elétricos (SBSE)
 
 (OBRIGATÓRIO)
 - A execução dos exemplos demanda previamente a seleção dos arquivos .mat, associados às tabelas de pesquisa.
-  -- Para selecionar os arquivos .mat, clique sobre "smData" na interface gráfica dos exemplos e na aba "lookup-
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS- Para selecionar os arquivos .mat, clique sobre "smData" na interface gráfica dos exemplos e na aba "lookup-
   table definition" selecione através dos diretório do computados o arquivo com as tabelas de pesquisa.
   
 (OPICIONAL)
