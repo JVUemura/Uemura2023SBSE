@@ -1,7 +1,7 @@
 # Uemura2023SBSE
 Arquivos desenvolvidos para o simpósio brasileiro de sistemas elétricos (SBSE).
 
-- Para verificar o desenvolvimento é necessário realizar o download do OMEdit e do arquivo "OmniPES.mo".
+- Para verificar o desenvolvimento é necessário realizar o download do OMEdit e do arquivo "DWT.mo".
 
 (OBRIGATÓRIO)
 - A execução dos exemplos demanda previamente a seleção dos arquivos .mat, associados às tabelas de pesquisa.
