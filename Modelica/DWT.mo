@@ -123,7 +123,7 @@ extends Modelica.Icons.Package;
         v = polar2cart(magnitude, angle);
         S = -v*conj(i);
         annotation(
-          Icon(graphics = {Ellipse(origin = {6, 1}, extent = {{-66, 67}, {66, -67}}, endAngle = 360), Line(origin = {-73, 0}, points = {{-13, 0}, {13, 0}}), Line(origin = {81, 0}, points = {{-9, 0}, {9, 0}}), Line(origin = {-4, -22}, points = {{12, -22}, {8, -22}, {2, -20}, {-4, -16}, {-10, -10}, {-12, -2}, {-12, 4}, {-10, 8}, {-6, 14}, {-2, 18}, {2, 20}, {8, 22}, {12, 22}, {12, 22}}), Line(origin = {16, 22}, rotation = 180, points = {{12, -22}, {8, -22}, {2, -20}, {-4, -16}, {-10, -10}, {-12, -2}, {-12, 4}, {-10, 8}, {-6, 14}, {-2, 18}, {2, 20}, {8, 22}, {12, 22}, {12, 22}}), Line(origin = {98, 0}, points = {{-10, 0}, {10, 0}}), Line(origin = {108, -1}, points = {{0, 33}, {0, -33}}), Line(origin = {122, -1}, points = {{0, 19}, {0, -19}}), Line(origin = {134, 1}, points = {{0, 3}, {0, -7}})}, coordinateSystem(initialScale = 0.1)));
+          Icon(graphics = {Ellipse(origin = {6, 1}, extent = {{-66, 67}, {66, -67}}), Line(origin = {-73, 0}, points = {{-13, 0}, {13, 0}}), Line(origin = {81, 0}, points = {{-9, 0}, {9, 0}}), Line(origin = {-4, -22}, points = {{12, -22}, {8, -22}, {2, -20}, {-4, -16}, {-10, -10}, {-12, -2}, {-12, 4}, {-10, 8}, {-6, 14}, {-2, 18}, {2, 20}, {8, 22}, {12, 22}, {12, 22}}), Line(origin = {16, 22}, rotation = 180, points = {{12, -22}, {8, -22}, {2, -20}, {-4, -16}, {-10, -10}, {-12, -2}, {-12, 4}, {-10, 8}, {-6, 14}, {-2, 18}, {2, 20}, {8, 22}, {12, 22}, {12, 22}}), Line(origin = {98, 0}, points = {{-10, 0}, {10, 0}}), Line(origin = {108, -1}, points = {{0, 33}, {0, -33}}), Line(origin = {122, -1}, points = {{0, 19}, {0, -19}}), Line(origin = {134, 1}, points = {{0, 3}, {0, -7}})}, coordinateSystem(initialScale = 0.1, extent = {{-100, -100}, {100, 100}})));
       end VoltageSource;
 
       model ControlledVoltageSource
@@ -193,7 +193,7 @@ extends Modelica.Icons.Package;
       DWT.WindTurbine.ControlModel.ControlTurbine ControlTurbine(Vw_max = smData.Vw_max, Vw_min = smData.Vw_min, Vw_nom = smData.Vw_nom, Vw_wmax = smData.Vw_wmax, Vw_wmin = smData.Vw_wmin, Wrm_min = smData.Wrm_min, Wrm_nom = smData.Wrm_nom, fileNameR2 = smData.fileNameR2, fileNameR4 = smData.fileNameR4, tableNameR2 = smData.tableNameR2, tableNameR4 = smData.tableNameR4) annotation(
         Placement(visible = true, transformation(origin = {-29, -35}, extent = {{-11, -11}, {11, 11}}, rotation = 0)));
       Modelica.Blocks.Interfaces.RealInput Vw annotation(
-        Placement(visible = true, transformation(origin = {-52, 14}, extent = {{-6, -6}, {6, 6}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Placement(visible = true, transformation(origin = {-48, 14}, extent = {{-6, -6}, {6, 6}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       DWT.Circuit.Interfaces.PositivePin pin_DFIG annotation(
         Placement(visible = true, transformation(origin = {66, 14}, extent = {{-4, -4}, {4, 4}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
     equation
@@ -218,7 +218,7 @@ extends Modelica.Icons.Package;
       connect(eolica.Beta, ControlTurbine.beta) annotation(
         Line(points = {{-29.2, 4}, {-29, 4}, {-29, -25}}, color = {0, 0, 127}));
       connect(Vw, eolica.Vw) annotation(
-        Line(points = {{-52, 14}, {-36, 14}}, color = {0, 0, 127}));
+        Line(points = {{-48, 14}, {-36, 14}}, color = {0, 0, 127}));
       connect(pin_DFIG, powerSensor.pin_n) annotation(
         Line(points = {{66, 14}, {62, 14}}, color = {0, 0, 255}));
   connect(eolica.flange_Eixo, mit.eixo) annotation(
@@ -234,7 +234,7 @@ extends Modelica.Icons.Package;
   connect(pin_DFIG, voltageSensor.pin_p) annotation(
         Line(points = {{66, 14}, {65, 14}, {65, -26}}, color = {0, 0, 255}));
   connect(Vw, ControlTurbine.Vw) annotation(
-        Line(points = {{-52, 14}, {-50, 14}, {-50, -31}, {-41, -31}}, color = {0, 0, 127}));
+        Line(points = {{-48, 14}, {-48, -31}, {-41, -31}}, color = {0, 0, 127}));
   connect(currentSensor1.pin_n, powerSensor.pin_p) annotation(
         Line(points = {{54, -6}, {54, 14}}, color = {0, 0, 255}));
   connect(ControlTurbine.Wrm_opt, ControlMachine.Wref) annotation(
