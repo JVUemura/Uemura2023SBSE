@@ -322,9 +322,9 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         parameter Units.PerUnit Ceq = 35.897 "Capacitor of converter" annotation(
           Dialog(group = "Conversor Data"));
         // Control pitch data:
-        parameter Units.PerUnit tb = 0.7143 "Controler pitch angle" annotation(
+        parameter Units.PerUnit tb = 0.0125 "Controler pitch angle" annotation(
           Dialog(group = "Pitch Control Data"));
-        parameter Units.PerUnit kb = 1.1905 "Controler by pitch angle" annotation(
+        parameter Units.PerUnit kb = 20 "Controler by pitch angle" annotation(
           Dialog(group = "Pitch Control Data"));
         // Control setings:
         parameter Units.PerUnit kiWrm = 6.04672 "ki by Wrm" annotation(
@@ -447,9 +447,9 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         parameter Units.PerUnit Dtm = 1.5 annotation(
           Dialog(group = "Mechanical Data"));
         // Parâmetros associados a dinâmica de Beta:
-        parameter Real kb = 0.7143 annotation(
+        parameter Real kb = 20 annotation(
           Dialog(group = "Control Calculed"));
-        parameter Real tb = 1.1905 annotation(
+        parameter Real tb = 0.0125 annotation(
           Dialog(group = "Control Calculed"));
         // Declaração de variáveis:
         DWT.Units.PerUnit Ttur, Ptur, Wtur;
@@ -461,20 +461,14 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Placement(visible = true, transformation(origin = {-118, 48}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-40, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Beta annotation(
           Placement(visible = true, transformation(origin = {-118, -58}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {28, -100}, extent = {{-10, -10}, {10, 10}}, rotation = 180)));
+        Modelica.Blocks.Continuous.TransferFunction tfBeta(a = {tb, 1, kb}, b = {kb}, initType = Modelica.Blocks.Types.Init.SteadyState) annotation(
+          Placement(visible = true, transformation(origin = {-74, -58}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Mechanics.Rotational.Components.Inertia inertia_tur(J = 2*Ht) annotation(
           Placement(visible = true, transformation(origin = {32, 0}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
         Modelica.Mechanics.Rotational.Sources.Torque torque annotation(
           Placement(visible = true, transformation(origin = {-2, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Mechanics.Rotational.Components.SpringDamper eixo(a_rel(fixed = false), c = Ktm, d = Dtm, phi_rel(fixed = false), phi_rel0(displayUnit = "rad"), w_rel(fixed = false)) annotation(
           Placement(visible = true, transformation(origin = {68, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Continuous.Integrator tfBeta(initType = Modelica.Blocks.Types.Init.SteadyState, k = kb) annotation(
-          Placement(visible = true, transformation(origin = {52, -62}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Continuous.TransferFunction tfdBeta(a = {tb, 1}, b = {1}, initType = Modelica.Blocks.Types.Init.SteadyState) annotation(
-          Placement(visible = true, transformation(origin = {-4, -62}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Math.Add add(k2 = -1) annotation(
-          Placement(visible = true, transformation(origin = {-32, -62}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Nonlinear.Limiter limiter(uMax = 10) annotation(
-          Placement(visible = true, transformation(origin = {24, -62}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       initial equation
         der(Wtur) = 0;
         der(eixo.phi_rel) = 0;
@@ -487,22 +481,14 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         Ptur = 0.5*(par*pi*R^2*cp*Vw^3)/Pb;
 // Obtendo o conjugado da turbina:
         Ttur = Ptur/Wtur;
+        connect(Beta, tfBeta.u) annotation(
+          Line(points = {{-118, -58}, {-86, -58}}, color = {0, 0, 127}));
         connect(torque.flange, inertia_tur.flange_b) annotation(
           Line(points = {{8, 0}, {22, 0}}));
         connect(inertia_tur.flange_a, eixo.flange_a) annotation(
           Line(points = {{42, 0}, {58, 0}}));
         connect(eixo.flange_b, flange_Eixo) annotation(
           Line(points = {{78, 0}, {104, 0}}));
-        connect(add.u2, tfBeta.y) annotation(
-          Line(points = {{-44, -68}, {-46, -68}, {-46, -82}, {64, -82}, {64, -62}}, color = {0, 0, 127}));
-        connect(tfdBeta.y, limiter.u) annotation(
-          Line(points = {{7, -62}, {11, -62}}, color = {0, 0, 127}));
-        connect(limiter.y, tfBeta.u) annotation(
-          Line(points = {{35, -62}, {39, -62}}, color = {0, 0, 127}));
-        connect(add.y, tfdBeta.u) annotation(
-          Line(points = {{-21, -62}, {-17, -62}}, color = {0, 0, 127}));
-  connect(Beta, add.u1) annotation(
-          Line(points = {{-118, -58}, {-44, -58}, {-44, -56}}, color = {0, 0, 127}));
         annotation(
           Icon(graphics = {Rectangle(origin = {35, 0}, lineColor = {0, 0, 255}, fillColor = {0, 0, 255}, extent = {{-15, 6}, {15, -6}}), Rectangle(origin = {3, 0}, lineColor = {0, 0, 255}, fillColor = {0, 0, 255}, fillPattern = FillPattern.Solid, extent = {{-17, 20}, {17, -20}}), Ellipse(origin = {-10, 0}, lineColor = {0, 0, 255}, fillColor = {0, 0, 255}, extent = {{-20, 20}, {20, -20}}), Polygon(origin = {0, 80}, lineColor = {0, 0, 255}, points = {{6, -60}, {0, -60}, {0, 120}, {20, 0}, {20, 0}, {6, -60}}), Polygon(origin = {0, -110}, lineColor = {0, 0, 255}, points = {{0, 90}, {0, -90}, {20, 28}, {6, 90}, {0, 90}, {0, 90}})}, coordinateSystem(extent = {{-100, -100}, {100, 100}})));
       end TURBINA;
@@ -694,6 +680,159 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
             Diagram,
             Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Line(points = {{-100, -100}, {100, 100}, {100, 100}}, color = {0, 0, 255}), Text(origin = {40, -43}, lineColor = {0, 0, 255}, extent = {{-82, 35}, {82, -35}}, textString = "qd"), Text(origin = {-30, 52}, lineColor = {0, 0, 255}, extent = {{60, -28}, {-60, 28}}, textString = "Sys")}));
         end iT;
+
+        model FControl_TeIqr
+          parameter DWT.Units.PerUnit Ls = 3.1 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lm = 3.0 annotation(
+            Dialog(group = "Eletrical Data"));
+          Modelica.Blocks.Interfaces.RealInput Te annotation(
+            Placement(visible = true, transformation(origin = {-120, 50}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealOutput Iqr annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+            Placement(visible = true, transformation(origin = {-120, -50}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-1.77636e-15, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          Te = Vqs*(-Lm/Ls*Iqr);
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(lineColor = {0, 0, 255}, extent = {{-100, 40}, {100, -40}}, textString = "Iqr(Te)")}));
+        end FControl_TeIqr;
+
+        model FControl_QsIdr
+          parameter DWT.Units.PerUnit Ls = 3.1 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lm = 3.0 annotation(
+            Dialog(group = "Eletrical Data"));
+          Modelica.Blocks.Interfaces.RealInput Qs annotation(
+            Placement(visible = true, transformation(origin = {-120, 50}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealOutput Idr annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+            Placement(visible = true, transformation(origin = {-120, -50}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-1.77636e-15, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          Qs = Vqs*((Vqs - Lm*Idr)/Ls);
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(lineColor = {0, 0, 255}, extent = {{-100, 40}, {100, -40}}, textString = "Idr(Qs)")}));
+        end FControl_QsIdr;
+
+        model FControl_VccIqg
+          // Parameters:
+          parameter DWT.Units.PerUnit Ceq = 35.897 annotation(
+            Dialog(group = "Eletrical Data"));
+          // Modelica pins:
+          Modelica.Blocks.Interfaces.RealOutput Iqg annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Vcc annotation(
+            Placement(visible = true, transformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Pcc annotation(
+            Placement(visible = true, transformation(origin = {-50, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {70, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+          Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+            Placement(visible = true, transformation(origin = {50, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {-70, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          Vcc = Iqg + 0*(Pcc - Vqs*Iqg);
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(origin = {3, 3}, lineColor = {0, 0, 255}, extent = {{-49, 49}, {49, -49}}, textString = "Udg(mdg)")}));
+        end FControl_VccIqg;
+
+        model FControl_UqrVqr
+          // Parameters:
+          parameter DWT.Units.PerUnit Ls = 3.1 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lr = 3.08 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lm = 3.0 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lac = Lr - Lm^2/Ls annotation(
+            Dialog(group = "Eletrical Data"));
+          // Variables:
+          DWT.Units.PerUnit disVqr;
+          // Modelica pins:
+          Modelica.Blocks.Interfaces.RealInput Wmed annotation(
+            Placement(visible = true, transformation(origin = {-90, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {0, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
+          Modelica.Blocks.Interfaces.RealOutput Vqr annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+            Placement(visible = true, transformation(origin = {30, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {0, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+          Modelica.Blocks.Interfaces.RealInput Uqr annotation(
+            Placement(visible = true, transformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Idr annotation(
+            Placement(visible = true, transformation(origin = {-30, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {-50, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          disVqr = (1 - Wmed)*(Lac*Idr + Lm/Ls*Vqs);
+          Vqr = Uqr + disVqr;
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(textColor = {0, 0, 255}, extent = {{-100, 40}, {100, -40}}, textString = "Uqr(mqr)")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})));
+        end FControl_UqrVqr;
+
+        model FControl_UdrVdr
+          // Parameters:
+          parameter DWT.Units.PerUnit Ls = 3.1 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lr = 3.08 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lm = 3.0 annotation(
+            Dialog(group = "Eletrical Data"));
+          parameter DWT.Units.PerUnit Lac = Lr - Lm^2/Ls annotation(
+            Dialog(group = "Eletrical Data"));
+          // Variables:
+          DWT.Units.PerUnit disVdr;
+          // Modelica pins:
+          Modelica.Blocks.Interfaces.RealInput Wmed annotation(
+            Placement(visible = true, transformation(origin = {-50, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {2, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
+          Modelica.Blocks.Interfaces.RealOutput Vdr annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Udr annotation(
+            Placement(visible = true, transformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Iqr annotation(
+            Placement(visible = true, transformation(origin = {0, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {-50, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          disVdr = -(1 - Wmed)*Lac*Iqr;
+          Vdr = Udr + disVdr;
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(textColor = {0, 0, 255}, extent = {{-100, 40}, {100, -40}}, textString = "Udr(mdr)")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})));
+        end FControl_UdrVdr;
+
+        model FControl_UqgVqg
+          // Parameters:
+          parameter DWT.Units.PerUnit Lc = 0.04 annotation(
+            Dialog(group = "Eletrical Data"));
+          // Variables:
+          DWT.Units.PerUnit disVqg;
+          // Modelica pins:
+          Modelica.Blocks.Interfaces.RealOutput Vqg annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+            Placement(visible = true, transformation(origin = {30, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {0, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+          Modelica.Blocks.Interfaces.RealInput Uqg annotation(
+            Placement(visible = true, transformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Idg annotation(
+            Placement(visible = true, transformation(origin = {-30, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {-50, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          disVqg = (-Lc*Idg) - Vqs;
+          Vqg = Uqg + disVqg;
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(lineColor = {0, 0, 255}, extent = {{-100, 40}, {100, -40}}, textString = "Uqg(mqg)")}));
+        end FControl_UqgVqg;
+
+        model FControl_UdgVdg
+          // Parameters:
+          parameter DWT.Units.PerUnit Lc = 0.04 annotation(
+            Dialog(group = "Eletrical Data"));
+          // Variables:
+          DWT.Units.PerUnit disVdg;
+          // Modelica pins:
+          Modelica.Blocks.Interfaces.RealOutput Vdg annotation(
+            Placement(visible = true, transformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Udg annotation(
+            Placement(visible = true, transformation(origin = {-120, 0}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {-110, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+          Modelica.Blocks.Interfaces.RealInput Iqg annotation(
+            Placement(visible = true, transformation(origin = {-50, 120}, extent = {{-20, -20}, {20, 20}}, rotation = -90), iconTransformation(origin = {-50, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+        equation
+          disVdg = -Lc*Iqg;
+          Vdg = Udg + disVdg;
+          annotation(
+            Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Text(lineColor = {0, 0, 255}, extent = {{-100, 40}, {100, -40}}, textString = "Udg(mdg)")}));
+        end FControl_UdgVdg;
 
         model PI_ASTROM
           parameter Real kp = 1, ki = 1;
@@ -917,6 +1056,9 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Placement(visible = true, transformation(origin = {0, 34}, extent = {{-20, -20}, {20, 20}}, rotation = 0)));
       equation
       // Conexão textual:
+        Wmed = currentControl.Wmed;
+        estimadorControl.Vqsmed = referenceControl.Vqs;
+        estimadorControl.Vqsmed = currentControl.Vqs;
         estimadorControl.Iqdrmed = currentControl.Iqdrmed;
         estimadorControl.Iqdgmed = currentControl.Iqdgmed;
         Vccmed = modulationControl.Vccmed;
@@ -953,7 +1095,7 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         connect(Igmed, estimadorControl.Igmed) annotation(
           Line(points = {{-34, 34}, {-22, 34}}, color = {0, 0, 127}, thickness = 0.5));
         annotation(
-          Diagram(coordinateSystem(extent = {{-100, -25}, {100, 25}}), graphics = {Text(origin = {89, 3}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Vccmed"), Text(origin = {29, -65}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdrmed"), Text(origin = {39, -65}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdgmed"), Text(origin = {89, -63}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "theta"), Text(origin = {-1, -16}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Iqdr"), Text(origin = {-1, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Iqdg"), Text(origin = {59, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Vqdg"), Text(origin = {59, -16}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Vqdr"), Text(origin = {-59, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Wref"), Text(origin = {121, -16}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "mqdr"), Text(origin = {121, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "mqdg"), Text(origin = {35, 47}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Vqsmed"), Text(origin = {35, 31}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdrmed"), Text(origin = {35, 23}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdgmed"), Text(origin = {33, 39}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "theta")}),
+          Diagram(coordinateSystem(extent = {{-100, -25}, {100, 25}}), graphics = {Text(origin = {20, 1}, rotation = -90, textColor = {0, 0, 127}, extent = {{-11, 2}, {11, -2}}, textString = "Wmed"), Text(origin = {89, 3}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Vccmed"), Text(origin = {19, -65}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Vqsmed"), Text(origin = {29, -65}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdrmed"), Text(origin = {39, -65}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdgmed"), Text(origin = {-31, -65}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Vqsmed"), Text(origin = {89, -63}, rotation = -90, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "theta"), Text(origin = {-1, -16}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Iqdr"), Text(origin = {-1, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Iqdg"), Text(origin = {59, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Vqdg"), Text(origin = {59, -16}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Vqdr"), Text(origin = {-59, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "Wref"), Text(origin = {121, -16}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "mqdr"), Text(origin = {121, -36}, rotation = 180, textColor = {0, 0, 127}, extent = {{-9, 2}, {9, -2}}, textString = "mqdg"), Text(origin = {35, 47}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Vqsmed"), Text(origin = {35, 31}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdrmed"), Text(origin = {35, 23}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "Iqdgmed"), Text(origin = {33, 39}, rotation = 180, textColor = {0, 0, 127}, extent = {{-12, 2}, {12, -2}}, textString = "theta")}),
           Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 26}, {100, -26}}), Text(origin = {0, 1}, textColor = {0, 0, 255}, extent = {{-100, 11}, {100, -11}}, textString = "CONTROLE")}, coordinateSystem(extent = {{-100, -25}, {100, 25}})));
       end CONTROL;
 
@@ -1031,6 +1173,8 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Placement(visible = true, transformation(origin = {-20, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         DWT.WindTurbine.ControlModel.Funcoes.T tr annotation(
           Placement(visible = true, transformation(origin = {50, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Modelica.Blocks.Interfaces.RealOutput Vqsmed annotation(
+          Placement(visible = true, transformation(origin = {110, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 60}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealOutput Iqdrmed[2] annotation(
           Placement(visible = true, transformation(origin = {110, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, -20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealOutput Iqdgmed[2] annotation(
@@ -1044,6 +1188,8 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Line(points = {{-104, 0}, {-31, 0}}, color = {0, 0, 127}, thickness = 0.5));
         connect(pll.Delta, tg.theta) annotation(
           Line(points = {{-9, 0}, {-1, 0}, {-1, -9}, {50, -9}}, color = {0, 0, 127}));
+        connect(pll.Vqds[1], Vqsmed) annotation(
+          Line(points = {{-20, 12}, {-20, 40}, {110, 40}}, color = {0, 0, 127}));
         connect(tr.y, Iqdrmed) annotation(
           Line(points = {{61, 20}, {110, 20}}, color = {0, 0, 127}, thickness = 0.5));
         connect(tg.y, Iqdgmed) annotation(
@@ -1090,8 +1236,8 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Placement(visible = true, transformation(origin = {10, -80}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Vccmed annotation(
           Placement(visible = true, transformation(origin = {-90, -56}, extent = {{-8, -8}, {8, 8}}, rotation = 0), iconTransformation(origin = {0, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
-        DWT.WindTurbine.ControlModel.Funcoes.PI_ASTROM regW(ki = -kiWrm, kp = -kpWrm) annotation(
-          Placement(visible = true, transformation(origin = {10, 70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        DWT.WindTurbine.ControlModel.Funcoes.PI_ASTROM regW(ki = kiWrm, kp = kpWrm) annotation(
+          Placement(visible = true, transformation(origin = {-16, 70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         DWT.WindTurbine.ControlModel.Funcoes.Limiter Limiter3(maxMod = 1) annotation(
           Placement(visible = true, transformation(origin = {50, -50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         DWT.WindTurbine.ControlModel.Funcoes.Limiter Limiter1(maxMod = 1) annotation(
@@ -1100,10 +1246,14 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Placement(visible = true, transformation(origin = {-16, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Sources.Constant fQgref(k = Qgref) annotation(
           Placement(visible = true, transformation(origin = {-90, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        DWT.WindTurbine.ControlModel.Funcoes.PI_ASTROM regQ(ki = kiQs, kp = 0) annotation(
-          Placement(visible = true, transformation(origin = {10, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        DWT.WindTurbine.ControlModel.Funcoes.FControl_TeIqr fControl_TeIqr(Lm = Lm, Ls = Ls) annotation(
+          Placement(visible = true, transformation(origin = {10, 70}, extent = {{-10, 10}, {10, -10}}, rotation = 0)));
+        DWT.WindTurbine.ControlModel.Funcoes.PI_ASTROM regQ(ki = -kiQs, kp = 0) annotation(
+          Placement(visible = true, transformation(origin = {-16, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         DWT.WindTurbine.ControlModel.Funcoes.PI_ASTROM pi_astrom3(ki = kiVcc, kp = kpVcc) annotation(
           Placement(visible = true, transformation(origin = {10, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        DWT.WindTurbine.ControlModel.Funcoes.FControl_QsIdr fControl_QsIdr(Lm = Lm, Ls = Ls) annotation(
+          Placement(visible = true, transformation(origin = {10, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Math.Product quad2 annotation(
           Placement(visible = true, transformation(origin = {-16, -56}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Qmed annotation(
@@ -1112,27 +1262,33 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Placement(visible = true, transformation(origin = {-90, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Wref annotation(
           Placement(visible = true, transformation(origin = {-90, 70}, extent = {{-8, -8}, {8, 8}}, rotation = 0), iconTransformation(origin = {-110, -50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+          Placement(visible = true, transformation(origin = {-1, 49}, extent = {{-11, -11}, {11, 11}}, rotation = 0), iconTransformation(origin = {0, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Modelica.Blocks.Interfaces.RealOutput Iqdr[2] annotation(
           Placement(visible = true, transformation(origin = {90, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealOutput Iqdg[2] annotation(
           Placement(visible = true, transformation(origin = {90, -50}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, -50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       equation
+        connect(fControl_QsIdr.Idr, Limiter1.u[2]) annotation(
+          Line(points = {{21, 30}, {39, 30}, {39, 50}}, color = {0, 0, 127}));
         connect(pi_astrom3.y, Limiter3.u[1]) annotation(
           Line(points = {{21.2, -30}, {39, -30}, {39, -50}}, color = {0, 0, 127}));
         connect(fVccref.y, quad1.u2) annotation(
           Line(points = {{-79, -30}, {-34, -30}, {-34, -36}, {-28, -36}}, color = {0, 0, 127}));
         connect(Wref, regW.r) annotation(
-          Line(points = {{-90, 70}, {-1, 70}}, color = {0, 0, 127}));
+          Line(points = {{-90, 70}, {-28, 70}}, color = {0, 0, 127}));
         connect(Wmed, regW.m) annotation(
-          Line(points = {{-90, 56}, {-90, 59}, {10, 59}}, color = {0, 0, 127}));
+          Line(points = {{-90, 56}, {-16, 56}, {-16, 58}}, color = {0, 0, 127}));
+        connect(fControl_TeIqr.Iqr, Limiter1.u[1]) annotation(
+          Line(points = {{21, 70}, {39, 70}, {39, 50}}, color = {0, 0, 127}));
         connect(Vccmed, quad2.u1) annotation(
           Line(points = {{-90, -56}, {-36, -56}, {-36, -50}, {-28, -50}}, color = {0, 0, 127}));
         connect(Vccmed, quad2.u2) annotation(
           Line(points = {{-90, -56}, {-36, -56}, {-36, -62}, {-28, -62}}, color = {0, 0, 127}));
         connect(Qmed, regQ.m) annotation(
-          Line(points = {{-90, 6}, {-16, 6}, {-16, 19}, {10, 19}}, color = {0, 0, 127}));
+          Line(points = {{-90, 6}, {-16, 6}, {-16, 19}}, color = {0, 0, 127}));
         connect(fQgref.y, regQ.r) annotation(
-          Line(points = {{-79, 30}, {-1, 30}}, color = {0, 0, 127}));
+          Line(points = {{-79, 30}, {-29, 30}}, color = {0, 0, 127}));
         connect(quad2.y, pi_astrom3.m) annotation(
           Line(points = {{-5, -56}, {10, -56}, {10, -41}}, color = {0, 0, 127}));
         connect(refIdg.y, Limiter3.u[2]) annotation(
@@ -1141,14 +1297,18 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Line(points = {{-5, -30}, {-2, -30}}, color = {0, 0, 127}));
         connect(fVccref.y, quad1.u1) annotation(
           Line(points = {{-79, -30}, {-34, -30}, {-34, -24}, {-28, -24}}, color = {0, 0, 127}));
+        connect(regW.y, fControl_TeIqr.Te) annotation(
+          Line(points = {{-4.8, 70}, {-1, 70}}, color = {0, 0, 127}));
+        connect(regQ.y, fControl_QsIdr.Qs) annotation(
+          Line(points = {{-4.8, 30}, {-1, 30}}, color = {0, 0, 127}));
+        connect(Vqs, fControl_QsIdr.Vqs) annotation(
+          Line(points = {{-1, 49}, {10, 49}, {10, 42}}, color = {0, 0, 127}));
         connect(Limiter1.y, Iqdr) annotation(
           Line(points = {{61, 50}, {90, 50}}, color = {0, 0, 127}, thickness = 0.5));
         connect(Limiter3.y, Iqdg) annotation(
           Line(points = {{60, -50}, {90, -50}}, color = {0, 0, 127}, thickness = 0.5));
-  connect(regW.y, Limiter1.u[1]) annotation(
-          Line(points = {{21, 70}, {40, 70}, {40, 50}}, color = {0, 0, 127}));
-  connect(regQ.y, Limiter1.u[2]) annotation(
-          Line(points = {{21, 30}, {40, 30}, {40, 50}}, color = {0, 0, 127}));
+        connect(Vqs, fControl_TeIqr.Vqs) annotation(
+          Line(points = {{-1, 49}, {10, 49}, {10, 60}}, color = {0, 0, 127}));
         annotation(
           Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Line(points = {{-100, -100}, {100, 100}, {100, 100}}, color = {0, 0, 255}), Text(origin = {-21, 80}, textColor = {0, 0, 255}, extent = {{-79, 20}, {79, -20}}, textString = "REF"), Text(origin = {19, -81}, textColor = {0, 0, 255}, extent = {{81, -19}, {-81, 19}}, textString = "CUR")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})));
       end ReferenceControl;
@@ -1182,24 +1342,36 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         //
         Modelica.Blocks.Interfaces.RealInput Ig[2] annotation(
           Placement(visible = true, transformation(origin = {-38, -50}, extent = {{-8, -8}, {8, 8}}, rotation = 0), iconTransformation(origin = {-110, -50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Funcoes.FControl_UdgVdg fControl_UdgVdg(Lc = Lc) annotation(
+          Placement(visible = true, transformation(origin = {20, -70}, extent = {{-10, 10}, {10, -10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Iqdgmed[2] annotation(
           Placement(visible = true, transformation(origin = {-120, -50}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {50, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Modelica.Blocks.Interfaces.RealInput Iqdrmed[2] annotation(
           Placement(visible = true, transformation(origin = {-120, 52}, extent = {{-20, -20}, {20, 20}}, rotation = 0), iconTransformation(origin = {0, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Funcoes.Limiter Limiter4 annotation(
           Placement(visible = true, transformation(origin = {60, -50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Modelica.Blocks.Interfaces.RealInput Wmed annotation(
+          Placement(visible = true, transformation(origin = {0, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {-50, 110}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
         Funcoes.Limiter Limiter2 annotation(
           Placement(visible = true, transformation(origin = {60, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Funcoes.PI_ASTROM pi_astrom3(ki = kiIdg, kp = kpIdg) annotation(
           Placement(visible = true, transformation(origin = {-10, -70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        DWT.WindTurbine.ControlModel.Funcoes.FControl_UqrVqr fControl_UqrVqr(Lm = Lm, Lr = Lr, Ls = Ls) annotation(
+          Placement(visible = true, transformation(origin = {20, 30}, extent = {{-10, 10}, {10, -10}}, rotation = 0)));
         Funcoes.PI_ASTROM pi_astrom(ki = kiIdr, kp = kpIdr) annotation(
           Placement(visible = true, transformation(origin = {-10, 70}, extent = {{-10, 10}, {10, -10}}, rotation = 0)));
         Funcoes.PI_ASTROM pi_astrom1(ki = kiIqr, kp = kpIqr) annotation(
           Placement(visible = true, transformation(origin = {-10, 30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Funcoes.FControl_UqgVqg fControl_UqgVqg(Lc = Lc) annotation(
+          Placement(visible = true, transformation(origin = {20, -30}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Funcoes.PI_ASTROM pi_astrom2(ki = kiIqg, kp = kpIqg) annotation(
           Placement(visible = true, transformation(origin = {-10, -30}, extent = {{-10, 10}, {10, -10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealInput Ir[2] annotation(
           Placement(visible = true, transformation(origin = {-38, 52}, extent = {{-8, -8}, {8, 8}}, rotation = 0), iconTransformation(origin = {-110, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Funcoes.FControl_UdrVdr fControl_UdrVdr(Lm = Lm, Lr = Lr, Ls = Ls) annotation(
+          Placement(visible = true, transformation(origin = {20, 70}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+        Modelica.Blocks.Interfaces.RealInput Vqs annotation(
+          Placement(visible = true, transformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {-50, -110}, extent = {{-10, -10}, {10, 10}}, rotation = 90)));
         Modelica.Blocks.Interfaces.RealOutput Vr[2] annotation(
           Placement(visible = true, transformation(origin = {108, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0), iconTransformation(origin = {110, 50}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         Modelica.Blocks.Interfaces.RealOutput Vg[2] annotation(
@@ -1207,8 +1379,20 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
       equation
         connect(Ig[1], pi_astrom2.r) annotation(
           Line(points = {{-38, -50}, {-28, -50}, {-28, -30}, {-22, -30}}, color = {0, 0, 127}));
+        connect(fControl_UdgVdg.Vdg, Limiter4.u[2]) annotation(
+          Line(points = {{32, -70}, {50, -70}, {50, -50}}, color = {0, 0, 127}));
+        connect(Iqdgmed[2], fControl_UqgVqg.Idg) annotation(
+          Line(points = {{-120, -50}, {-48, -50}, {-48, -16}, {16, -16}, {16, -18}}, color = {0, 0, 127}));
+        connect(Iqdgmed[1], fControl_UdgVdg.Iqg) annotation(
+          Line(points = {{-120, -50}, {-48, -50}, {-48, -84}, {16, -84}, {16, -80}}, color = {0, 0, 127}));
         connect(Iqdgmed[2], pi_astrom3.m) annotation(
           Line(points = {{-120, -50}, {-48, -50}, {-48, -82}, {-10, -82}}, color = {0, 0, 127}));
+        connect(pi_astrom3.y, fControl_UdgVdg.Udg) annotation(
+          Line(points = {{2, -70}, {10, -70}}, color = {0, 0, 127}));
+        connect(pi_astrom2.y, fControl_UqgVqg.Uqg) annotation(
+          Line(points = {{2, -30}, {10, -30}}, color = {0, 0, 127}));
+        connect(fControl_UqgVqg.Vqg, Limiter4.u[1]) annotation(
+          Line(points = {{32, -30}, {50, -30}, {50, -50}}, color = {0, 0, 127}));
         connect(Iqdgmed[1], pi_astrom2.m) annotation(
           Line(points = {{-120, -50}, {-48, -50}, {-48, -18}, {-10, -18}}, color = {0, 0, 127}));
         connect(Ig[2], pi_astrom3.r) annotation(
@@ -1217,22 +1401,34 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Line(points = {{-38, 52}, {-28, 52}, {-28, 70}, {-22, 70}}, color = {0, 0, 127}));
         connect(Ir[1], pi_astrom1.r) annotation(
           Line(points = {{-38, 52}, {-28, 52}, {-28, 30}, {-22, 30}}, color = {0, 0, 127}));
+        connect(pi_astrom.y, fControl_UdrVdr.Udr) annotation(
+          Line(points = {{2, 70}, {10, 70}}, color = {0, 0, 127}));
+        connect(fControl_UdrVdr.Vdr, Limiter2.u[2]) annotation(
+          Line(points = {{32, 70}, {50, 70}, {50, 50}}, color = {0, 0, 127}));
+        connect(fControl_UqrVqr.Vqr, Limiter2.u[1]) annotation(
+          Line(points = {{32, 30}, {50, 30}, {50, 50}}, color = {0, 0, 127}));
+        connect(fControl_UqrVqr.Uqr, pi_astrom1.y) annotation(
+          Line(points = {{10, 30}, {2, 30}}, color = {0, 0, 127}));
+        connect(Wmed, fControl_UdrVdr.Wmed) annotation(
+          Line(points = {{0, 50}, {20, 50}, {20, 60}}, color = {0, 0, 127}));
+        connect(Wmed, fControl_UqrVqr.Wmed) annotation(
+          Line(points = {{0, 50}, {20, 50}, {20, 42}}, color = {0, 0, 127}));
         connect(Iqdrmed[2], pi_astrom.m) annotation(
           Line(points = {{-120, 52}, {-60, 52}, {-60, 82}, {-10, 82}}, color = {0, 0, 127}));
+        connect(Iqdrmed[1], fControl_UdrVdr.Iqr) annotation(
+          Line(points = {{-120, 52}, {-60, 52}, {-60, 84}, {16, 84}, {16, 82}}, color = {0, 0, 127}));
         connect(Iqdrmed[1], pi_astrom1.m) annotation(
           Line(points = {{-120, 52}, {-60, 52}, {-60, 18}, {-10, 18}}, color = {0, 0, 127}));
+        connect(Iqdrmed[2], fControl_UqrVqr.Idr) annotation(
+          Line(points = {{-120, 52}, {-60, 52}, {-60, 16}, {16, 16}, {16, 20}}, color = {0, 0, 127}));
+        connect(Vqs, fControl_UqrVqr.Vqs) annotation(
+          Line(points = {{10, 0}, {20, 0}, {20, 20}}, color = {0, 0, 127}));
+        connect(Vqs, fControl_UqgVqg.Vqs) annotation(
+          Line(points = {{10, 0}, {20, 0}, {20, -18}}, color = {0, 0, 127}));
         connect(Limiter2.y, Vr) annotation(
           Line(points = {{70, 50}, {108, 50}}, color = {0, 0, 127}, thickness = 0.5));
         connect(Limiter4.y, Vg) annotation(
           Line(points = {{70, -50}, {108, -50}}, color = {0, 0, 127}, thickness = 0.5));
-  connect(pi_astrom2.y, Limiter4.u[1]) annotation(
-          Line(points = {{2, -30}, {50, -30}, {50, -50}}, color = {0, 0, 127}));
-  connect(pi_astrom3.y, Limiter4.u[2]) annotation(
-          Line(points = {{2, -70}, {50, -70}, {50, -50}}, color = {0, 0, 127}));
-  connect(pi_astrom.y, Limiter2.u[2]) annotation(
-          Line(points = {{2, 70}, {50, 70}, {50, 50}}, color = {0, 0, 127}));
-  connect(pi_astrom1.y, Limiter2.u[1]) annotation(
-          Line(points = {{2, 30}, {50, 30}, {50, 50}}, color = {0, 0, 127}));
         annotation(
           Diagram(coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Icon(graphics = {Rectangle(lineColor = {0, 0, 255}, fillColor = {255, 255, 255}, fillPattern = FillPattern.Solid, extent = {{-100, 100}, {100, -100}}), Line(origin = {-0.53, 0}, points = {{-100, -100}, {100, 100}, {100, 100}}, color = {0, 0, 255}), Text(origin = {-19, 80}, textColor = {0, 0, 255}, extent = {{-81, 20}, {81, -20}}, textString = "CUR"), Text(origin = {20, -81}, textColor = {0, 0, 255}, extent = {{80, -19}, {-80, 19}}, textString = "VOL")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})));
@@ -1423,19 +1619,19 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         parameter DWT.WindTurbine.Interfaces.DWTData smData(MVAs = data.Sbase, Wb = data.wb, fileNameR2 = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Notebooks Python/LookupTables/omegaR2.mat", fileNameR4 = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Notebooks Python/LookupTables/betaR4.mat") annotation(
           Placement(visible = true, transformation(origin = {-10, 42}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
         DWT.Circuit.Sources.ControlledVoltageSource controlledVoltageSource annotation(
-          Placement(visible = true, transformation(origin = {30, 6}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
+          Placement(visible = true, transformation(origin = {50, 6}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
       equation
         if time < 1 then
           controlledVoltageSource.v = Complex(1, 0);
-        elseif time > 1 and time <= 1.1 then
-          controlledVoltageSource.v = Complex(0.5, 0);
+        elseif time > 1 and time <= 2 then
+          controlledVoltageSource.v = Complex(0.9, 0);
         else
           controlledVoltageSource.v = Complex(1, 0);
         end if;
         connect(ramp.y, dfig.Vw) annotation(
           Line(points = {{-23, 16}, {-10, 16}}, color = {0, 0, 127}));
         connect(dfig.pin_DFIG, controlledVoltageSource.p) annotation(
-          Line(points = {{12, 16}, {30, 16}}, color = {0, 0, 255}));
+          Line(points = {{12, 16}, {50, 16}}, color = {0, 0, 255}));
       protected
         annotation(
           experiment(StartTime = 0, StopTime = 10, Tolerance = 1e-06, Interval = 0.001));
