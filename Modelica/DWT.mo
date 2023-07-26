@@ -176,7 +176,7 @@ package DWT
 
     model DFIG
       parameter DWT.WindTurbine.Interfaces.DWTData smData;
-      DWT.WindTurbine.MachineModel.MIT mit(Hm = smData.convData.Hm, Llr = smData.convData.Llr, Lls = smData.convData.Lls, Lm = smData.convData.Lm, Rr = smData.convData.Rr, Rs = smData.convData.Rs) annotation(
+      DWT.WindTurbine.MachineModel.MIT mit(Hm = smData.convData.Hm, Llr = smData.convData.Llr, Lls = smData.convData.Lls, Lm = smData.convData.Lm, Rr = smData.convData.Rr, Rs = smData.convData.Rs, Wb = smData.Wb) annotation(
         Placement(visible = true, transformation(origin = {-4, 14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
       DWT.WindTurbine.TurbineModel.TURBINA TURBINA(Dtm = smData.convData.Dtm, Ht = smData.convData.Ht, Ktm = smData.convData.Ktm, N = smData.N, Pb = 1e6*smData.MVAb, R = smData.R, Wrmb = smData.Wrmb, kb = smData.kb, par = smData.par, tb = smData.tb) annotation(
         Placement(visible = true, transformation(origin = {-36, 14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
@@ -322,9 +322,9 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         parameter Units.PerUnit Ceq = 35.897 "Capacitor of converter" annotation(
           Dialog(group = "Conversor Data"));
         // Control pitch data:
-        parameter Units.PerUnit tb = 0.0125 "Controler pitch angle" annotation(
+        parameter Units.PerUnit tb = 1.1905 "Controler pitch angle" annotation(
           Dialog(group = "Pitch Control Data"));
-        parameter Units.PerUnit kb = 20 "Controler by pitch angle" annotation(
+        parameter Units.PerUnit kb = 0.7143 "Controler by pitch angle" annotation(
           Dialog(group = "Pitch Control Data"));
         // Control setings:
         parameter Units.PerUnit kiWrm = 6.04672 "ki by Wrm" annotation(
@@ -521,6 +521,8 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
           Dialog(group = "Eletrical Data"));
         parameter SI.Time Hm = 0.52 "Constante de Inércia [s]" annotation(
           Dialog(group = "Eletrical Data"));
+        parameter SI.AngularVelocity Wb = 377 "Velocidade angular base [rad/s]" annotation(
+          Dialog(group = "Base Data"));
         // Interfaces:
         Modelica.Mechanics.Rotational.Interfaces.Flange_a eixo annotation(
           Placement(visible = true, transformation(origin = {-20, 16}, extent = {{-2, -2}, {2, 2}}, rotation = 0), iconTransformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
@@ -554,14 +556,14 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         fqs = Lls*Iqs + Lm*(Iqs + Iqr);
         fds = Lls*Ids + Lm*(Ids + Idr);
         Vqs = Rs*Iqs + fds;
-// + der(fqs);// negligenciada
+// + der(fqs)/Wb;// negligenciada
         Vds = Rs*Ids - fqs;
-// + der(fds);// negligenciada
+// + der(fds)/Wb;// negligenciada
 //  Equações de fluxo e tensão do rotor:
         fqr = Llr*Iqr + Lm*(Iqs + Iqr);
         fdr = Llr*Idr + Lm*(Ids + Idr);
-        Vqr = Rr*Iqr + (1 - Wrm)*fdr + der(fqr);
-        Vdr = Rr*Idr - (1 - Wrm)*fqr + der(fdr);
+        Vqr = Rr*Iqr + (1 - Wrm)*fdr + der(fqr)/Wb;
+        Vdr = Rr*Idr - (1 - Wrm)*fqr + der(fdr)/Wb;
 //  Representação do conjugado elétrico:
         Te = fds*Iqs - fqs*Ids;
         connect(eixo, inertia_maq.flange_a) annotation(
@@ -1607,63 +1609,6 @@ CONTROLE")}, coordinateSystem(extent = {{-100, -100}, {100, 100}})),
         annotation(
           experiment(StartTime = 0, StopTime = 100, Tolerance = 1e-06, Interval = 0.001));
       end Exemplo_PotReativa;
-
-      model Exemplo_AfundTensao
-        extends Modelica.Icons.Example;
-        inner DWT.SystemData data(Sbase = 2) annotation(
-          Placement(visible = true, transformation(origin = {10, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = 0, offset = 12, startTime = 0) annotation(
-          Placement(visible = true, transformation(origin = {-30, 16}, extent = {{-6, -6}, {6, 6}}, rotation = 0)));
-        DFIG dfig(smData = smData) annotation(
-          Placement(visible = true, transformation(origin = {0, 16}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        parameter DWT.WindTurbine.Interfaces.DWTData smData(MVAs = data.Sbase, Wb = data.wb, fileNameR2 = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Notebooks Python/LookupTables/omegaR2.mat", fileNameR4 = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Notebooks Python/LookupTables/betaR4.mat") annotation(
-          Placement(visible = true, transformation(origin = {-10, 42}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        DWT.Circuit.Sources.ControlledVoltageSource controlledVoltageSource annotation(
-          Placement(visible = true, transformation(origin = {50, 6}, extent = {{-10, -10}, {10, 10}}, rotation = -90)));
-      equation
-        if time < 1 then
-          controlledVoltageSource.v = Complex(1, 0);
-        elseif time > 1 and time <= 2 then
-          controlledVoltageSource.v = Complex(0.9, 0);
-        else
-          controlledVoltageSource.v = Complex(1, 0);
-        end if;
-        connect(ramp.y, dfig.Vw) annotation(
-          Line(points = {{-23, 16}, {-10, 16}}, color = {0, 0, 127}));
-        connect(dfig.pin_DFIG, controlledVoltageSource.p) annotation(
-          Line(points = {{12, 16}, {50, 16}}, color = {0, 0, 255}));
-      protected
-        annotation(
-          experiment(StartTime = 0, StopTime = 10, Tolerance = 1e-06, Interval = 0.001));
-      end Exemplo_AfundTensao;
-
-      model Exemplo_SistemaRadial
-        extends Modelica.Icons.Example;
-        inner DWT.SystemData data(Sbase = 2) annotation(
-          Placement(visible = true, transformation(origin = {10, 40}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        DWT.Circuit.Sources.VoltageSource voltageSource annotation(
-          Placement(visible = true, transformation(origin = {61, 11}, extent = {{-5, -5}, {5, 5}}, rotation = -90)));
-        Modelica.Blocks.Sources.Ramp ramp(duration = 0, height = -2, offset = 12, startTime = 5) annotation(
-          Placement(visible = true, transformation(origin = {-30, 16}, extent = {{-6, -6}, {6, 6}}, rotation = 0)));
-        DFIG dfig(smData = smData) annotation(
-          Placement(visible = true, transformation(origin = {0, 16}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        parameter DWT.WindTurbine.Interfaces.DWTData smData(MVAs = data.Sbase, Qgref = -0.5, Wb = data.wb, fileNameR2 = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Notebooks Python/LookupTables/omegaR2.mat", fileNameR4 = "/home/uemura/MYCODE/SBSE/Uemura2023SBSE/Notebooks Python/LookupTables/betaR4.mat") annotation(
-          Placement(visible = true, transformation(origin = {-10, 42}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-        Circuit.Basic.SeriesImpedance seriesImpedance(r = 0, x = 0.01) annotation(
-          Placement(visible = true, transformation(origin = {36, 16}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-      equation
-        connect(ramp.y, dfig.Vw) annotation(
-          Line(points = {{-23, 16}, {-10, 16}}, color = {0, 0, 127}));
-        connect(seriesImpedance.n, voltageSource.p) annotation(
-          Line(points = {{46, 16}, {62, 16}}, color = {0, 0, 255}));
-        connect(dfig.pin_DFIG, seriesImpedance.p) annotation(
-          Line(points = {{12, 16}, {26, 16}}, color = {0, 0, 255}));
-      protected
-        annotation(
-          experiment(StartTime = 0, StopTime = 100, Tolerance = 1e-06, Interval = 0.001),
-          __OpenModelica_commandLineOptions = "--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian",
-          __OpenModelica_simulationFlags(lv = "LOG_STATS", s = "cvode"));
-      end Exemplo_SistemaRadial;
     end Examples;
   end WindTurbine;
   annotation(
