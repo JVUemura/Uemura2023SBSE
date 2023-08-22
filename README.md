@@ -1,5 +1,5 @@
 # Uemura2023SBSE
-Arquivos desenvolvidos para o simpósio brasileiro de sistemas elétricos (SBSE).
+Arquivos desenvolvidos para o Simpósio Brasileiro de Sistemas Elétricos (SBSE 2023).
 
 - Para verificar o desenvolvimento é necessário realizar o download do OMEdit e do arquivo "DWT.mo".
 
